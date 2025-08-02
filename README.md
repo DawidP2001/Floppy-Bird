@@ -14,7 +14,9 @@
 ## Development Dependencies
 
 ## Usage
-
+1. Download SFLM
+2. Download the game files
+3. Follow the instructions for installing SFLM on the [official SFLM website](https://sflm.sourceforge.net/)
 
 ## Authors
 Dawid Pionk

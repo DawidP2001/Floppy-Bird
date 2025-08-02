@@ -1,0 +1,26 @@
+# Ignore build output
+Debug/
+Release/
+include/
+lib/
+x64/
+*.obj
+*.pdb
+*.exe
+*.lib
+*.dll
+*.sdf
+*.ipch
+*.opensdf
+*.log
+
+# Ignore Visual Studio temporary files
+.vscode/
+.vs/
+*.suo
+*.user
+*.vcxproj.user
+
+# Ignore SFML if included in the project directory (recommended: link from outside)
+SFML/
+sfml-*.dll
