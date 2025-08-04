@@ -7,12 +7,25 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
-void jump(sf::Sprite& sprite) {
-	sprite.move({ 0.f, -50.f }); // Move the sprite up by 50 pixels
+sf::RectangleShape static createObstacle() {
+    sf::RectangleShape obstacle({ 50.f, 600.f });
+    obstacle.setFillColor(sf::Color::Green);
+    obstacle.setPosition({ 600.f, 0.f });
+    return obstacle;
+}   
+sf::RectangleShape static createGap() {
+    sf::RectangleShape obstacleGap({ 50.f, 100.f });
+    obstacleGap.setFillColor(sf::Color::White);
+    obstacleGap.setPosition({ 600.f, 200.f });
+	return obstacleGap;
+
+}
+void static jump(sf::Sprite& sprite) {
+	sprite.move({ 0.f, -10.f }); // Move the sprite up by 50 pixels
 }
 
 // Checks for events like key presses
-void checkEvents(sf::Sprite& sprite) {
+void static checkEvents(sf::Sprite& sprite) {
     // Check for jump
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
     {
@@ -20,10 +33,15 @@ void checkEvents(sf::Sprite& sprite) {
     }
 }
 
-void draw(sf::RenderWindow window) {
+void static drawObstacles(sf::RenderWindow& window) {
+
 }
 
-void checkCollision() {
+void static draw(sf::RenderWindow& window) {
+    drawObstacles(window);
+}
+
+void static checkCollision() {
 
 }
 
@@ -33,15 +51,19 @@ int main()
     window.setFramerateLimit(60);
     sf::Texture texture("assets/dog.jpg");
     sf::Sprite sprite(texture);
+	sf::RectangleShape obstacle = createObstacle();
+	sf::RectangleShape obstacleGap = createGap();
 
-    // run the program as long as the window is open
     while (window.isOpen())
 	{
-		window.clear(); // clear the window with default color (black)
+		window.clear(); 
 		checkEvents(sprite);
-		sprite.move({ 10.f, 10.f }); // Move the sprite down by 1 pixel each frame
+		sprite.move({ 0.f, 5.f }); 
         window.draw(sprite);
-		window.display(); // display what has been drawn to the windowor
+		window.draw(obstacle);
+		window.draw(obstacleGap);
+		window.display();
+
         // check all the window's events that were triggered since the last iteration of the loop
         while (const std::optional event = window.pollEvent())
         {
