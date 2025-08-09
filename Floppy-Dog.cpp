@@ -38,7 +38,7 @@ public:
 
 class Obstacle {
 private:
-    int width = 50;
+    float width = 100;
     int height = 600;
     int gapHeight = 100;
     int gapPosition = 250;
@@ -46,8 +46,8 @@ private:
     sf::RectangleShape bottomRectangle;
 public:
     Obstacle() :
-		topRectangle({100.f, 100.f}),
-        bottomRectangle({100.f, 100.f})
+		topRectangle({ width, static_cast<float>(gapPosition) }),
+        bottomRectangle({ width,  static_cast<float>(height)})
     {
         topRectangle.setFillColor(sf::Color::Green);
         bottomRectangle.setFillColor(sf::Color::Green);
@@ -59,9 +59,10 @@ public:
         topRectangle.move({ -5.f, 0.f });
         bottomRectangle.move({ -5.f, 0.f });
         if(topRectangle.getPosition().x < -width) {
-            // Reset position when it goes off screen
+			gapPosition = rand() % (height - gapHeight); // Generate new gap position
             topRectangle.setPosition({ 800.f, 0.f });
-            bottomRectangle.setPosition({ 800.f, 100.f });
+			topRectangle.setSize({ 100.f, static_cast<float>(gapPosition) });
+            bottomRectangle.setPosition({ 800.f, static_cast<float>(gapPosition+gapHeight) });
 		}
     }
     
@@ -95,6 +96,8 @@ private:
     sf::Text scoreText;
 	Player player;
 	Obstacle obstacle;
+    // Speed
+    // Gravity
 
     unsigned int fontSize = 24; // Font size for the score text
     int frameCount = 60;
