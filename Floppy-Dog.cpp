@@ -6,7 +6,7 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
-
+/*
 class Player {
 public:
     sf::Texture texture;
@@ -121,48 +121,48 @@ void updateObstacles(std::vector<Obstacle>& obstacles) {
         }
     }
 }
-
+*/
 class FloppyDogGame {
 private:
     sf::Font font;
-    sf::Text scoreText;
-    std::vector<Obstacle> obstacles;
-    Player player;
-    
-public:
-    const float windowWidth = 800.f;
-    const float windowHeight = 600.f;
-    int score;
+    std::string scoreTextStr;
+    int fontSize; // Font size for the score text
+    sf::Color scoreColor;
     sf::RenderWindow window;
+    sf::Text scoreText;
 
-    // Remove = default and provide custom constructor
-    FloppyDogGame() : window(sf::VideoMode({ 800, 600 }), "Floppy Dog"), score(0) {
+    void draw() {
+        window.clear();
+        /*
+        // Draw obstacles
+        for (auto& obstacle : obstacles) {
+            window.draw(obstacle.getTopRectangle());
+            window.draw(obstacle.getBottomRectangle());
+        }
+
+        // Draw player
+        window.draw(player.getSprite());
+        */
+        // Draw score
+        window.draw(scoreText);
+
+        window.display();
+    }
+
+public:
+    FloppyDogGame() :
+        font("assets/fonts/arial.ttf"), // Load the font
+        scoreTextStr("Score: 0"), // Initialize score text
+        fontSize(30), // Set font size for the score text
+        scoreColor(sf::Color::White), // Set color for the score text
+        scoreText(font, scoreTextStr, fontSize),
+		window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game")
+    {
         window.setFramerateLimit(60);
     }
     
     ~FloppyDogGame() = default;
-
-    // Initialize the game
-    void init() {
-        // Remove window initialization since it's done in constructor
-        
-        // Load font
-        if (!font.openFromFile("assets/fonts/arial.ttf")) {
-            std::cerr << "Error loading font!" << std::endl;
-        }
-        
-        // Initialize player
-        player.init();
-        
-        // Create score text
-        std::string scoreTextStr = "Score: " + std::to_string(score);
-        scoreText = createText(scoreTextStr, font, 30, sf::Color::White);
-        
-        // Create obstacles
-        int numObstacles = 5;
-        obstacles = createObstacles(numObstacles);
-    }
-
+    /*
     // Check for events like key presses
     void checkEvents() {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
@@ -174,31 +174,12 @@ public:
         player.update();
         updateObstacles(obstacles);
     }
-
+    */
     // Draw the game elements
-    void draw() {
-        window.clear();
-        
-        // Draw obstacles
-        for (auto& obstacle : obstacles) {
-            window.draw(obstacle.getTopRectangle());
-            window.draw(obstacle.getBottomRectangle());
-        }
-        
-        // Draw player
-        window.draw(player.getSprite());
-        
-        // Draw score
-        window.draw(scoreText);
-        
-        window.display();
-    }
 
-    // Run the game loop
+
     void run() {
         while (window.isOpen()) {
-            checkEvents();
-            update();
             draw();
 
             // Handle window events
@@ -212,7 +193,6 @@ public:
 
 int main() {
     FloppyDogGame game;
-    game.init();
     game.run();
     return 0;
 }
