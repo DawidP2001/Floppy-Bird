@@ -6,26 +6,21 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
-/*
+
 class Player {
-public:
+private:
     sf::Texture texture;
     sf::Sprite sprite;
-    int width = 50;
-    int height = 50;
-    
-    Player() = default;
-    ~Player() = default;
-    
-    // Initialize the player
-    void init() {
-        if (!texture.loadFromFile("assets/dog.jpg")) {
-            std::cerr << "Error loading texture!" << std::endl;
-        }
-        sprite.setTexture(texture);
+public:
+
+    Player() :
+        texture("assets/dog.jpg"),
+		sprite(texture)
+    {
         sprite.setPosition({ 100.f, 500.f });
         sprite.setScale({ 0.5f, 0.5f });
     }
+    ~Player() = default;
     
     // Get the player sprite
     sf::Sprite& getSprite() {
@@ -42,35 +37,32 @@ public:
 };
 
 class Obstacle {
-public:
+private:
     int width = 50;
     int height = 600;
     int gapHeight = 100;
     int gapPosition = 250;
     sf::RectangleShape topRectangle;
     sf::RectangleShape bottomRectangle;
-    
-    Obstacle() = default;
+public:
+    Obstacle() :
+		topRectangle({100.f, 100.f}),
+        bottomRectangle({100.f, 100.f})
+    {
+        topRectangle.setFillColor(sf::Color::Green);
+        bottomRectangle.setFillColor(sf::Color::Green);
+	}
     ~Obstacle() = default;
     
-    // Initialize the obstacle with a gap
-    void init(float x = 600.f) {
-        // Top part of the obstacle
-        topRectangle.setSize({ static_cast<float>(width), static_cast<float>(gapPosition) });
-        topRectangle.setPosition({ x, 0.f });
-        topRectangle.setFillColor(sf::Color::Green);
-        
-        // Bottom part of the obstacle
-        float bottomHeight = height - gapPosition - gapHeight;
-        bottomRectangle.setSize({ static_cast<float>(width), bottomHeight });
-        bottomRectangle.setPosition({ x, static_cast<float>(gapPosition + gapHeight) });
-        bottomRectangle.setFillColor(sf::Color::Green);
-    }
-    
-    // Move both parts of the obstacle
-    void move(float x, float y) {
-        topRectangle.move({ x, y });
-        bottomRectangle.move({ x, y });
+
+    void update() {
+        topRectangle.move({ -5.f, 0.f });
+        bottomRectangle.move({ -5.f, 0.f });
+        if(topRectangle.getPosition().x < -width) {
+            // Reset position when it goes off screen
+            topRectangle.setPosition({ 800.f, 0.f });
+            bottomRectangle.setPosition({ 800.f, 100.f });
+		}
     }
     
     // Set position for both parts
@@ -94,75 +86,31 @@ public:
     }
 };
 
-// Create a text object
-sf::Text createText(const std::string& text, const sf::Font& font, unsigned int size, const sf::Color& color) {
-    sf::Text sfText(font, text);
-    sfText.setCharacterSize(size);
-    sfText.setFillColor(color);
-    sfText.setPosition({ 10.f, 10.f });
-    return sfText;
-}
-
-// Creates a vector of obstacles
-std::vector<Obstacle> createObstacles(int numObstacles) {
-    std::vector<Obstacle> obstacles;
-    obstacles.resize(numObstacles);
-    for (int i = 0; i < numObstacles; ++i) {
-        obstacles[i].init(600.f + i * 200.f);
-    }
-    return obstacles;
-}
-
-void updateObstacles(std::vector<Obstacle>& obstacles) {
-    for (auto& obstacle : obstacles) {
-        obstacle.move(-5.f, 0.f);
-        if (obstacle.getPositionX() < -50.f) {
-            obstacle.setPosition(850.f, 0.f);
-        }
-    }
-}
-*/
 class FloppyDogGame {
 private:
     sf::Font font;
     std::string scoreTextStr;
-    int fontSize; // Font size for the score text
     sf::Color scoreColor;
     sf::RenderWindow window;
     sf::Text scoreText;
+	Player player;
+	Obstacle obstacle;
+
+    unsigned int fontSize = 24; // Font size for the score text
+    int frameCount = 60;
+    unsigned int screenWidth = 800;
+    unsigned int screenHeight = 600;
 
     void draw() {
         window.clear();
-        /*
-        // Draw obstacles
-        for (auto& obstacle : obstacles) {
-            window.draw(obstacle.getTopRectangle());
-            window.draw(obstacle.getBottomRectangle());
-        }
 
-        // Draw player
         window.draw(player.getSprite());
-        */
-        // Draw score
+		window.draw(obstacle.getTopRectangle());
+		window.draw(obstacle.getBottomRectangle());
         window.draw(scoreText);
 
         window.display();
     }
-
-public:
-    FloppyDogGame() :
-        font("assets/fonts/arial.ttf"), // Load the font
-        scoreTextStr("Score: 0"), // Initialize score text
-        fontSize(30), // Set font size for the score text
-        scoreColor(sf::Color::White), // Set color for the score text
-        scoreText(font, scoreTextStr, fontSize),
-		window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game")
-    {
-        window.setFramerateLimit(60);
-    }
-    
-    ~FloppyDogGame() = default;
-    /*
     // Check for events like key presses
     void checkEvents() {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
@@ -172,16 +120,30 @@ public:
 
     void update() {
         player.update();
-        updateObstacles(obstacles);
+		obstacle.update(); // Move the obstacle left
     }
-    */
-    // Draw the game elements
-
-
+public:
+    FloppyDogGame() :
+        font("assets/fonts/arial.ttf"), // Load the font
+        scoreTextStr("Score: 0"), // Initialize score text
+        scoreColor(sf::Color::White), // Set color for the score text
+        scoreText(font, scoreTextStr),
+        window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
+		player(),
+		obstacle()
+    {
+		scoreText.setCharacterSize(fontSize);
+        window.setFramerateLimit(frameCount);
+        obstacle.setPosition(800.f, 0.f);
+    }
+    
+    ~FloppyDogGame() = default;
+    
     void run() {
         while (window.isOpen()) {
+			checkEvents();
+			update();
             draw();
-
             // Handle window events
             while (const std::optional event = window.pollEvent()) {
                 if (event->is<sf::Event::Closed>())
