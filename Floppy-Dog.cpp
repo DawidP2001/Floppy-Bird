@@ -11,6 +11,9 @@ class Player {
 private:
     sf::Texture texture;
     sf::Sprite sprite;
+	float veolocityY = 0.f; // Vertical velocity for jumping
+	float gravity = 0.5f; // Gravity effect
+	float jumpHeight = -10.f; // Height of the jump
 public:
 
     Player() :
@@ -28,11 +31,16 @@ public:
     }
     
     void jump() {
-        sprite.move({ 0.f, -10.f });
+        veolocityY = jumpHeight; // Set the vertical velocity to jump height
     }
     
     void update() {
-        sprite.move({ 0.f, 5.f });
+        if (sprite.getPosition().y < 0) {
+            sprite.setPosition({ sprite.getPosition().x, 0.f }); // Prevent going above the top
+            veolocityY = 0.f; // Reset vertical velocity
+		}
+		veolocityY += gravity; // Apply gravity to the vertical velocity
+        sprite.move({ 0.f, veolocityY });
     }
 };
 
@@ -141,8 +149,14 @@ private:
 
         window.display();
     }
-    // Replace the collisionDetection() method with the following:
 
+    void checkPlayerBounds() {
+        sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
+        if (playerBounds.position.y > screenHeight) {
+            // Reset the game if the player goes out of bounds
+            reset();
+        }
+	}
     void collisionDetection() {
         for (Obstacle& obstacle : obstacles) {
             sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
@@ -150,9 +164,10 @@ private:
             sf::FloatRect bottomBounds = obstacle.getBottomRectangle().getGlobalBounds();
 			
             if (playerBounds.findIntersection(topBounds) || playerBounds.findIntersection(bottomBounds)) {
-                std::cout << "Collision detected!" << std::endl;
+				//reset(); // Reset the game if collision occurs
             }
             else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
+                // if the player doesn't die and is pass the x axis of the top obstacle +1 point
                 ++score;
 				obstacle.setScored(); // Mark this obstacle as scored
                 scoreTextStr = "Score: " + std::to_string(score);
@@ -161,16 +176,19 @@ private:
             
         }
     }
-    // Check for events like key presses
-    void checkEvents() {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-            player.jump();
-        }
-    }
 
     void update() {
         player.update();
 		updateObstacles();
+    }
+
+    void reset() {
+		score = 0; // Reset score
+        scoreTextStr = "Score: 0"; // Reset score text
+        scoreText.setString(scoreTextStr);
+        obstacles.clear(); // Clear existing obstacles
+        createObstacles(numOfObstacles); // Create new obstacles
+		player.getSprite().setPosition({ 100.f, 500.f }); // Reset player position
     }
 public:
     FloppyDogGame() :
@@ -182,6 +200,7 @@ public:
 		player()
     {
 		scoreText.setCharacterSize(fontSize);
+        window.setKeyRepeatEnabled(false);
         window.setFramerateLimit(frameCount);
 		createObstacles(numOfObstacles); // Create initial obstacles
     }
@@ -190,14 +209,18 @@ public:
     
     void run() {
         while (window.isOpen()) {
-			checkEvents();
             collisionDetection();
+            checkPlayerBounds();
 			update();
             draw();
             // Handle window events
             while (const std::optional event = window.pollEvent()) {
                 if (event->is<sf::Event::Closed>())
                     window.close();
+                if (event->is<sf::Event::KeyPressed>() && 
+                    event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Space) {
+                    player.jump();
+				}
             }
         }
     }
