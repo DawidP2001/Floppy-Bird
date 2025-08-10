@@ -111,8 +111,9 @@ private:
     sf::Text scoreText;
 	Player player;
     std::vector<Obstacle> obstacles;
-    // Speed
-    // Gravity
+	sf::Texture bgWallTexture;
+    sf::Sprite bgWallSprite1;
+	sf::Sprite bgWallSprite2; // 2 sprites for a scrolling background
 
 	int score = 0; // Player score
 	const int numOfObstacles = 3; // Number of obstacles to create
@@ -120,18 +121,30 @@ private:
     const int frameCount = 60;
     const unsigned int screenWidth = 800;
     const unsigned int screenHeight = 600;
+	const float scrollScreenSpeed = 5; // Speed of the scrolling screen
 
+    void drawBackground() {
+		window.draw(bgWallSprite1);
+		window.draw(bgWallSprite2);
+        
+	}
     void drawObstacles() {
         for (Obstacle& obstacle : obstacles) {
             window.draw(obstacle.getTopRectangle());
             window.draw(obstacle.getBottomRectangle());
         }
     }
-    void updateObstacles() {
-        for (Obstacle& obstacle : obstacles) {
-            obstacle.update();
-        }
-	}   
+    void draw() {
+        window.clear();
+
+        drawBackground();
+        window.draw(player.getSprite());
+        drawObstacles();
+        window.draw(scoreText);
+
+        window.display();
+    }
+
     void createObstacles(const int numberOfObstacles) {
         // Create a new obstacle and add it to the vector
         for (int i = 0; i < numberOfObstacles; ++i) {
@@ -140,21 +153,12 @@ private:
             obstacles.push_back(newObstacle);
 		}
 	}
-    void draw() {
-        window.clear();
-
-        window.draw(player.getSprite());
-		drawObstacles();
-        window.draw(scoreText);
-
-        window.display();
-    }
-
+    
     void checkPlayerBounds() {
         sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
         if (playerBounds.position.y > screenHeight) {
             // Reset the game if the player goes out of bounds
-            reset();
+            //reset();
         }
 	}
     void collisionDetection() {
@@ -177,7 +181,25 @@ private:
         }
     }
 
+    void updateObstacles() {
+        for (Obstacle& obstacle : obstacles) {
+            obstacle.update();
+        }
+    }
+    void updateBackground() {
+        // Move the background sprites to create a scrolling effect
+        bgWallSprite1.move({ -scrollScreenSpeed, 0.f });
+        bgWallSprite2.move({ -scrollScreenSpeed, 0.f });
+        // Reset position if they go off screen
+        if (bgWallSprite1.getPosition().x <= -static_cast<float>(screenWidth)) {
+            bgWallSprite1.setPosition({ static_cast<float>(screenWidth), 0.f });
+        }
+        if (bgWallSprite2.getPosition().x <= -static_cast<float>(screenWidth)) {
+            bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
+        }
+	}
     void update() {
+        updateBackground();
         player.update();
 		updateObstacles();
     }
@@ -197,11 +219,19 @@ public:
         scoreColor(sf::Color::White), // Set color for the score text
         scoreText(font, scoreTextStr),
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
-		player()
+		player(),
+        bgWallTexture("assets/wall_texture/wall.png"),
+		bgWallSprite1(bgWallTexture),
+        bgWallSprite2(bgWallTexture)		
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
         window.setFramerateLimit(frameCount);
+        bgWallTexture.setRepeated(true); // Enable texture repetition for the background
+		bgWallSprite1.setPosition({ 0.f, 0.f });
+		bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
+        bgWallSprite1.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
+		bgWallSprite2.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
 		createObstacles(numOfObstacles); // Create initial obstacles
     }
     
