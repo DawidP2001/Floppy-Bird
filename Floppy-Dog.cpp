@@ -38,10 +38,12 @@ public:
 
 class Obstacle {
 private:
-    float width = 100;
-    int height = 600;
-    int gapHeight = 100;
+    const float width = 100;
+    const int height = 600;
+    const int gapHeight = 100;
     int gapPosition = 250;
+	bool scored = false;
+
     sf::RectangleShape topRectangle;
     sf::RectangleShape bottomRectangle;
 public:
@@ -63,6 +65,7 @@ public:
             topRectangle.setPosition({ 800.f, 0.f });
 			topRectangle.setSize({ 100.f, static_cast<float>(gapPosition) });
             bottomRectangle.setPosition({ 800.f, static_cast<float>(gapPosition+gapHeight) });
+			resetScored();
 		}
     }
     
@@ -72,11 +75,15 @@ public:
         bottomRectangle.setPosition({ x, y + gapPosition + gapHeight });
     }
     
-    // Get X position
-    float getPositionX() const {
-        return topRectangle.getPosition().x;
+    void setScored() {
+        scored = true;
+	}
+    void resetScored() {
+        scored = false;
     }
-    
+    bool hasScored() const {
+        return scored;
+	}
     // Get the rectangles
     sf::RectangleShape& getTopRectangle() {
         return topRectangle;
@@ -95,24 +102,64 @@ private:
     sf::RenderWindow window;
     sf::Text scoreText;
 	Player player;
-	Obstacle obstacle;
+    std::vector<Obstacle> obstacles;
     // Speed
     // Gravity
 
-    unsigned int fontSize = 24; // Font size for the score text
-    int frameCount = 60;
-    unsigned int screenWidth = 800;
-    unsigned int screenHeight = 600;
+	int score = 0; // Player score
+	const int numOfObstacles = 3; // Number of obstacles to create
+    const unsigned int fontSize = 24; // Font size for the score text
+    const int frameCount = 60;
+    const unsigned int screenWidth = 800;
+    const unsigned int screenHeight = 600;
 
+    void drawObstacles() {
+        for (Obstacle& obstacle : obstacles) {
+            window.draw(obstacle.getTopRectangle());
+            window.draw(obstacle.getBottomRectangle());
+        }
+    }
+    void updateObstacles() {
+        for (Obstacle& obstacle : obstacles) {
+            obstacle.update();
+        }
+	}   
+    void createObstacles(const int numberOfObstacles) {
+        // Create a new obstacle and add it to the vector
+        for (int i = 0; i < numberOfObstacles; ++i) {
+            Obstacle newObstacle;
+            newObstacle.setPosition(800.f + i * 300.f, 0.f); // Position them spaced out
+            obstacles.push_back(newObstacle);
+		}
+	}
     void draw() {
         window.clear();
 
         window.draw(player.getSprite());
-		window.draw(obstacle.getTopRectangle());
-		window.draw(obstacle.getBottomRectangle());
+		drawObstacles();
         window.draw(scoreText);
 
         window.display();
+    }
+    // Replace the collisionDetection() method with the following:
+
+    void collisionDetection() {
+        for (Obstacle& obstacle : obstacles) {
+            sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
+            sf::FloatRect topBounds = obstacle.getTopRectangle().getGlobalBounds();
+            sf::FloatRect bottomBounds = obstacle.getBottomRectangle().getGlobalBounds();
+			
+            if (playerBounds.findIntersection(topBounds) || playerBounds.findIntersection(bottomBounds)) {
+                std::cout << "Collision detected!" << std::endl;
+            }
+            else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
+                ++score;
+				obstacle.setScored(); // Mark this obstacle as scored
+                scoreTextStr = "Score: " + std::to_string(score);
+                scoreText.setString(scoreTextStr);
+            }
+            
+        }
     }
     // Check for events like key presses
     void checkEvents() {
@@ -123,7 +170,7 @@ private:
 
     void update() {
         player.update();
-		obstacle.update(); // Move the obstacle left
+		updateObstacles();
     }
 public:
     FloppyDogGame() :
@@ -132,12 +179,11 @@ public:
         scoreColor(sf::Color::White), // Set color for the score text
         scoreText(font, scoreTextStr),
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
-		player(),
-		obstacle()
+		player()
     {
 		scoreText.setCharacterSize(fontSize);
         window.setFramerateLimit(frameCount);
-        obstacle.setPosition(800.f, 0.f);
+		createObstacles(numOfObstacles); // Create initial obstacles
     }
     
     ~FloppyDogGame() = default;
@@ -145,6 +191,7 @@ public:
     void run() {
         while (window.isOpen()) {
 			checkEvents();
+            collisionDetection();
 			update();
             draw();
             // Handle window events
