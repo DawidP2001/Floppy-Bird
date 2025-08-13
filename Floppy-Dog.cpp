@@ -72,15 +72,16 @@ public:
     ~Obstacle() = default;
     
 
-    void update() {
+    /// Positioning after RESET NEEDS TO BE FIXED
+    void update(const float lastMostObstacleX) {
         topRectangle.move({ -5.f, 0.f });
         bottomRectangle.move({ -5.f, 0.f });
 
         if(topRectangle.getPosition().x < -width) {
 			gapPosition = rand() % (height - gapHeight); // Generate new gap position
-            topRectangle.setPosition({ 800.f, 0.f });
+            topRectangle.setPosition({ 1200.f, 0.f });
 			topRectangle.setSize({ 100.f, static_cast<float>(gapPosition) });
-            bottomRectangle.setPosition({ 800.f, static_cast<float>(gapPosition+gapHeight) });
+            bottomRectangle.setPosition({ 1200.f, static_cast<float>(gapPosition+gapHeight) });
 			resetScored();
 		}
 		textureSprite.setPosition(topRectangle.getPosition());
@@ -140,11 +141,16 @@ private:
     const unsigned int screenWidth = 800;
     const unsigned int screenHeight = 600;
 	const float scrollScreenSpeed = 5; // Speed of the scrolling screen
+    const int bgGrassSpriteHeight = 200;
+    const float obstacleSpacing = 400;
+    float lastMostObstacleX = 0;
 
     void drawBackground() {
 		window.draw(bgWallSprite1);
 		window.draw(bgWallSprite2);
-        
+        for (const auto& grassSprite : bgGrassSprites) {
+            window.draw(grassSprite);
+        }
 	}
     void drawObstacles() {
         for (Obstacle& obstacle : obstacles) {
@@ -153,17 +159,14 @@ private:
             window.draw(obstacle.getSprite());
 			window.draw(obstacle.getGapRectangle());
         }
-        for (const auto& grassSprite : bgGrassSprites) {
-            window.draw(grassSprite);
-		}
     }
     void draw() {
         window.clear();
 
         drawBackground();
-        window.draw(player.getSprite());
         drawObstacles();
         window.draw(scoreText);
+        window.draw(player.getSprite());
 
         window.display();
     }
@@ -179,8 +182,8 @@ private:
         bgGrassTexture.setRepeated(true); // Enable texture repetition for the grass
         for (int i = 0; i < 2; ++i) {
             sf::Sprite grassSprite(bgGrassTexture);
-            grassSprite.setPosition({ static_cast<float>(i * screenWidth), static_cast<float>(screenHeight - 100) });
-            grassSprite.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), 100}) });
+            grassSprite.setPosition({ static_cast<float>(i * screenWidth), static_cast<float>(screenHeight - bgGrassSpriteHeight) });
+            grassSprite.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), bgGrassSpriteHeight}) });
             bgGrassSprites.push_back(grassSprite);
         }
 	}   
@@ -188,9 +191,10 @@ private:
         // Create a new obstacle and add it to the vector
         for (int i = 0; i < numberOfObstacles; ++i) {
             Obstacle newObstacle = *new Obstacle();
-            newObstacle.setPosition(800.f + i * 300.f, 0.f); // Position them spaced out
+            newObstacle.setPosition(800.f + i * obstacleSpacing, 0.f); // Position them spaced out
             obstacles.push_back(newObstacle);
 		}
+        lastMostObstacleX = 800.f + numberOfObstacles * obstacleSpacing;
 	}
     
     void checkPlayerBounds() {
@@ -222,7 +226,7 @@ private:
 
     void updateObstacles() {
         for (Obstacle& obstacle : obstacles) {
-            obstacle.update();
+            obstacle.update(lastMostObstacleX);
         }
     }
     void updateBackground() {
@@ -241,7 +245,7 @@ private:
         for (auto& grassSprite : bgGrassSprites) {
             grassSprite.move({ -scrollScreenSpeed, 0.f });
             if (grassSprite.getPosition().x <= -static_cast<float>(screenWidth)) {
-                grassSprite.setPosition({ static_cast<float>(screenWidth), static_cast<float>(screenHeight - 100) });
+                grassSprite.setPosition({ static_cast<float>(screenWidth), static_cast<float>(screenHeight - bgGrassSpriteHeight) });
             }
 		}
 	}
