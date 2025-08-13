@@ -52,15 +52,22 @@ private:
     int gapPosition = 250;
 	bool scored = false;
 
+    sf::Texture texture;
+    sf::Sprite textureSprite;
+	sf::RectangleShape gapRectangle;
     sf::RectangleShape topRectangle;
     sf::RectangleShape bottomRectangle;
 public:
     Obstacle() :
+		gapRectangle({ static_cast<float>(width), static_cast<float>(gapHeight) }),
 		topRectangle({ width, static_cast<float>(gapPosition) }),
-        bottomRectangle({ width,  static_cast<float>(height)})
+        bottomRectangle({ width,  static_cast<float>(height)}),
+        texture("assets/bricksx64.png"),
+        textureSprite(texture)
     {
-        topRectangle.setFillColor(sf::Color::Green);
-        bottomRectangle.setFillColor(sf::Color::Green);
+        texture.setRepeated(true);
+        textureSprite.setTextureRect({ {0, 0}, {static_cast<int>(width), height} });
+		gapRectangle.setFillColor(sf::Color(0, 0, 0, 128));
 	}
     ~Obstacle() = default;
     
@@ -68,6 +75,7 @@ public:
     void update() {
         topRectangle.move({ -5.f, 0.f });
         bottomRectangle.move({ -5.f, 0.f });
+
         if(topRectangle.getPosition().x < -width) {
 			gapPosition = rand() % (height - gapHeight); // Generate new gap position
             topRectangle.setPosition({ 800.f, 0.f });
@@ -75,6 +83,8 @@ public:
             bottomRectangle.setPosition({ 800.f, static_cast<float>(gapPosition+gapHeight) });
 			resetScored();
 		}
+		textureSprite.setPosition(topRectangle.getPosition());
+		gapRectangle.setPosition({ topRectangle.getPosition().x, topRectangle.getPosition().y + gapPosition });
     }
     
     // Set position for both parts
@@ -100,6 +110,12 @@ public:
     sf::RectangleShape& getBottomRectangle() {
         return bottomRectangle;
     }
+    sf::Sprite& getSprite() {
+        return textureSprite;
+    }
+    sf::RectangleShape& getGapRectangle() {
+        return gapRectangle;
+	}
 };
 
 class FloppyDogGame {
@@ -114,6 +130,8 @@ private:
 	sf::Texture bgWallTexture;
     sf::Sprite bgWallSprite1;
 	sf::Sprite bgWallSprite2; // 2 sprites for a scrolling background
+	sf::Texture bgGrassTexture;
+    std::vector<sf::Sprite> bgGrassSprites;
 
 	int score = 0; // Player score
 	const int numOfObstacles = 3; // Number of obstacles to create
@@ -132,7 +150,12 @@ private:
         for (Obstacle& obstacle : obstacles) {
             window.draw(obstacle.getTopRectangle());
             window.draw(obstacle.getBottomRectangle());
+            window.draw(obstacle.getSprite());
+			window.draw(obstacle.getGapRectangle());
         }
+        for (const auto& grassSprite : bgGrassSprites) {
+            window.draw(grassSprite);
+		}
     }
     void draw() {
         window.clear();
@@ -144,11 +167,27 @@ private:
 
         window.display();
     }
+    void createBackground() {
+        // Create background Wall
+        bgWallTexture.setRepeated(true); // Enable texture repetition for the background
+        bgWallSprite1.setPosition({ 0.f, 0.f });
+        bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
+        bgWallSprite1.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
+        bgWallSprite2.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
 
+		// Create background Grass
+        bgGrassTexture.setRepeated(true); // Enable texture repetition for the grass
+        for (int i = 0; i < 2; ++i) {
+            sf::Sprite grassSprite(bgGrassTexture);
+            grassSprite.setPosition({ static_cast<float>(i * screenWidth), static_cast<float>(screenHeight - 100) });
+            grassSprite.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), 100}) });
+            bgGrassSprites.push_back(grassSprite);
+        }
+	}   
     void createObstacles(const int numberOfObstacles) {
         // Create a new obstacle and add it to the vector
         for (int i = 0; i < numberOfObstacles; ++i) {
-            Obstacle newObstacle;
+            Obstacle newObstacle = *new Obstacle();
             newObstacle.setPosition(800.f + i * 300.f, 0.f); // Position them spaced out
             obstacles.push_back(newObstacle);
 		}
@@ -197,6 +236,14 @@ private:
         if (bgWallSprite2.getPosition().x <= -static_cast<float>(screenWidth)) {
             bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
         }
+
+		// Update grass sprites 
+        for (auto& grassSprite : bgGrassSprites) {
+            grassSprite.move({ -scrollScreenSpeed, 0.f });
+            if (grassSprite.getPosition().x <= -static_cast<float>(screenWidth)) {
+                grassSprite.setPosition({ static_cast<float>(screenWidth), static_cast<float>(screenHeight - 100) });
+            }
+		}
 	}
     void update() {
         updateBackground();
@@ -220,18 +267,15 @@ public:
         scoreText(font, scoreTextStr),
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
 		player(),
-        bgWallTexture("assets/wall_texture/wall.png"),
+        bgWallTexture("assets/Cielo pixelado.png"),
 		bgWallSprite1(bgWallTexture),
-        bgWallSprite2(bgWallTexture)		
+        bgWallSprite2(bgWallTexture),
+		bgGrassTexture("assets/grass-set-00/grass14.png")
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
         window.setFramerateLimit(frameCount);
-        bgWallTexture.setRepeated(true); // Enable texture repetition for the background
-		bgWallSprite1.setPosition({ 0.f, 0.f });
-		bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
-        bgWallSprite1.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
-		bgWallSprite2.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
+        createBackground();
 		createObstacles(numOfObstacles); // Create initial obstacles
     }
     
