@@ -13,7 +13,7 @@ private:
     sf::Sprite sprite;
 	float veolocityY = 0.f; // Vertical velocity for jumping
 	float gravity = 0.5f; // Gravity effect
-	float jumpHeight = -10.f; // Height of the jump
+	float jumpHeight = -8.f; // Height of the jump
 public:
 
     Player() :
@@ -38,6 +38,12 @@ public:
         if (sprite.getPosition().y < 0) {
             sprite.setPosition({ sprite.getPosition().x, 0.f }); // Prevent going above the top
             veolocityY = 0.f; // Reset vertical velocity
+        }
+        else if( sprite.getPosition().y + sprite.getGlobalBounds().size.y > 600) {
+            if (veolocityY > 0.f) {
+                sprite.setPosition({ sprite.getPosition().x, 600.f - sprite.getGlobalBounds().size.y });
+                veolocityY = 0.f;
+            }
 		}
 		veolocityY += gravity; // Apply gravity to the vertical velocity
         sprite.move({ 0.f, veolocityY });
@@ -48,9 +54,9 @@ class Obstacle {
 private:
     const float width = 100;
     const int height = 600;
-    const int gapHeight = 100;
+    const int gapHeight = 150;
     int gapPosition = 250;
-	bool scored = false;
+	bool scored = false; // This variable is used to check if the player has scored by passing the obstacle, so it wouldn't be counted multiple times
 
     sf::Texture texture;
     sf::Sprite textureSprite;
@@ -73,15 +79,15 @@ public:
     
 
     /// Positioning after RESET NEEDS TO BE FIXED
-    void update(const float lastMostObstacleX) {
+    void update() {
         topRectangle.move({ -5.f, 0.f });
         bottomRectangle.move({ -5.f, 0.f });
 
         if(topRectangle.getPosition().x < -width) {
 			gapPosition = rand() % (height - gapHeight); // Generate new gap position
-            topRectangle.setPosition({ 1200.f, 0.f });
+            topRectangle.setPosition({ 800.f, 0.f });
 			topRectangle.setSize({ 100.f, static_cast<float>(gapPosition) });
-            bottomRectangle.setPosition({ 1200.f, static_cast<float>(gapPosition+gapHeight) });
+            bottomRectangle.setPosition({ 800.f, static_cast<float>(gapPosition+gapHeight) });
 			resetScored();
 		}
 		textureSprite.setPosition(topRectangle.getPosition());
@@ -134,17 +140,21 @@ private:
 	sf::Texture bgGrassTexture;
     std::vector<sf::Sprite> bgGrassSprites;
 
-	int score = 0; // Player score
-	const int numOfObstacles = 3; // Number of obstacles to create
+	const int numOfObstacles = 2; // Number of obstacles to create
     const unsigned int fontSize = 24; // Font size for the score text
     const int frameCount = 60;
     const unsigned int screenWidth = 800;
     const unsigned int screenHeight = 600;
 	const float scrollScreenSpeed = 5; // Speed of the scrolling screen
     const int bgGrassSpriteHeight = 200;
-    const float obstacleSpacing = 400;
-    float lastMostObstacleX = 0;
+	const float obstacleSpacing = 450; // The screen size is 800 plus obstacle 100 so the spacing number needs to keep that in mind
+    int score = 0; // Player score
+	bool gameOver = false; // Game over state
+	bool gameStarted = false; // Game started state
 
+    ///////////////////////
+    // DRAW FUNCTIONS
+    ///////////////////////
     void drawBackground() {
 		window.draw(bgWallSprite1);
 		window.draw(bgWallSprite2);
@@ -170,6 +180,9 @@ private:
 
         window.display();
     }
+    ///////////////////////
+    // CREATE FUNCTIONS
+    ///////////////////////
     void createBackground() {
         // Create background Wall
         bgWallTexture.setRepeated(true); // Enable texture repetition for the background
@@ -190,43 +203,18 @@ private:
     void createObstacles(const int numberOfObstacles) {
         // Create a new obstacle and add it to the vector
         for (int i = 0; i < numberOfObstacles; ++i) {
-            Obstacle newObstacle = *new Obstacle();
+			Obstacle newObstacle = *new Obstacle(); // I keep the object on the stack for texture reuse and simpler management
             newObstacle.setPosition(800.f + i * obstacleSpacing, 0.f); // Position them spaced out
             obstacles.push_back(newObstacle);
 		}
-        lastMostObstacleX = 800.f + numberOfObstacles * obstacleSpacing;
 	}
-    
-    void checkPlayerBounds() {
-        sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
-        if (playerBounds.position.y > screenHeight) {
-            // Reset the game if the player goes out of bounds
-            //reset();
-        }
-	}
-    void collisionDetection() {
-        for (Obstacle& obstacle : obstacles) {
-            sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
-            sf::FloatRect topBounds = obstacle.getTopRectangle().getGlobalBounds();
-            sf::FloatRect bottomBounds = obstacle.getBottomRectangle().getGlobalBounds();
-			
-            if (playerBounds.findIntersection(topBounds) || playerBounds.findIntersection(bottomBounds)) {
-				//reset(); // Reset the game if collision occurs
-            }
-            else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
-                // if the player doesn't die and is pass the x axis of the top obstacle +1 point
-                ++score;
-				obstacle.setScored(); // Mark this obstacle as scored
-                scoreTextStr = "Score: " + std::to_string(score);
-                scoreText.setString(scoreTextStr);
-            }
-            
-        }
-    }
 
+    ///////////////////////
+	// UPDATE FUNCTIONS
+    ///////////////////////
     void updateObstacles() {
         for (Obstacle& obstacle : obstacles) {
-            obstacle.update(lastMostObstacleX);
+            obstacle.update();
         }
     }
     void updateBackground() {
@@ -255,6 +243,9 @@ private:
 		updateObstacles();
     }
 
+    ///////////////////////
+    // UTILITY FUNCTIONS
+    ///////////////////////
     void reset() {
 		score = 0; // Reset score
         scoreTextStr = "Score: 0"; // Reset score text
@@ -262,6 +253,64 @@ private:
         obstacles.clear(); // Clear existing obstacles
         createObstacles(numOfObstacles); // Create new obstacles
 		player.getSprite().setPosition({ 100.f, 500.f }); // Reset player position
+    }
+    void collisionDetection() {
+        for (Obstacle& obstacle : obstacles) {
+            sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
+            sf::FloatRect topBounds = obstacle.getTopRectangle().getGlobalBounds();
+            sf::FloatRect bottomBounds = obstacle.getBottomRectangle().getGlobalBounds();
+
+            if (playerBounds.findIntersection(topBounds) || playerBounds.findIntersection(bottomBounds)) {
+                //reset(); // Reset the game if collision occurs
+            }
+            else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
+                // if the player doesn't die and is pass the x axis of the top obstacle +1 point
+                ++score;
+                obstacle.setScored(); // Mark this obstacle as scored
+                scoreTextStr = "Score: " + std::to_string(score);
+                scoreText.setString(scoreTextStr);
+            }
+
+        }
+    }
+    ///////////////////////
+    // DEBUGGING FUNCTIONS
+    ///////////////////////
+    void showDistance() {
+		float distance = obstacles[0].getTopRectangle().getPosition().x - obstacles[1].getSprite().getPosition().x;
+		const std::string distanceStr = "Distance: " + std::to_string(distance);
+		sf::Text distanceText(font, distanceStr);
+        distanceText.setCharacterSize(fontSize);
+        distanceText.setFillColor(sf::Color::White);
+        distanceText.setPosition({ 500.f, 10.f });
+		window.draw(distanceText); // Draw the distance text
+    }
+    ///////////////////////
+    // SCREEN FUNCTIONS
+    ///////////////////////
+    void showStartScreen() {
+		const std::string TitleStr = "Floppy Dog Game";
+		const std::string startTextStr = "Press Space to Start";
+		const float titleTextY = 100.f; // Y position for the title text
+		const float startTextY = 300.f; // Y position for the start text
+
+		sf::Text titleText(font, TitleStr);
+		titleText.setCharacterSize(48);
+        titleText.setFillColor(sf::Color::White);
+        titleText.setStyle(sf::Text::Bold);
+		titleText.setPosition({ static_cast<float>(screenWidth) / 2 - titleText.getGlobalBounds().size.x / 2, titleTextY });
+        sf::Text startText(font, startTextStr);
+		startText.setCharacterSize(24);
+        startText.setFillColor(sf::Color::White);
+		startText.setPosition({ static_cast<float>(screenWidth) / 2 - startText.getGlobalBounds().size.x / 2, startTextY });
+
+		window.clear(sf::Color::Black);
+		window.draw(titleText); // Draw the title text
+		window.draw(startText); // Draw the score text
+        window.display();
+    }
+    void showDeathScreen() {
+
     }
 public:
     FloppyDogGame() :
@@ -287,17 +336,26 @@ public:
     
     void run() {
         while (window.isOpen()) {
+            if(gameStarted){
             collisionDetection();
-            checkPlayerBounds();
 			update();
             draw();
+            } 
+            else {
+                showStartScreen();
+			}
             // Handle window events
             while (const std::optional event = window.pollEvent()) {
                 if (event->is<sf::Event::Closed>())
                     window.close();
                 if (event->is<sf::Event::KeyPressed>() && 
                     event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Space) {
-                    player.jump();
+                    if (gameStarted) {
+                        player.jump();
+                    }
+                    else {
+                        gameStarted = true; // Start the game
+                    }
 				}
             }
         }
