@@ -17,11 +17,11 @@ private:
 public:
 
     Player() :
-        texture("assets/dog.jpg"),
+        texture("assets/milo-stand.png"),
 		sprite(texture)
     {
         sprite.setPosition({ 100.f, 500.f });
-        sprite.setScale({ 0.5f, 0.5f });
+        sprite.setScale({ 1.f, 1.f });
     }
     ~Player() = default;
     
