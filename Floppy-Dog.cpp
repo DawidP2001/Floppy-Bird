@@ -9,7 +9,8 @@
 
 class Player {
 private:
-    sf::Texture texture;
+    sf::Texture stand_Texture;
+	sf::Texture jump_Texture;
     sf::Sprite sprite;
 	float veolocityY = 0.f; // Vertical velocity for jumping
 	float gravity = 0.5f; // Gravity effect
@@ -17,8 +18,9 @@ private:
 public:
 
     Player() :
-        texture("assets/milo-stand.png"),
-		sprite(texture)
+        stand_Texture("assets/milo-stand.png"),
+		jump_Texture("assets/milo-jump.png"),
+		sprite(stand_Texture)
     {
         sprite.setPosition({ 100.f, 500.f });
         sprite.setScale({ 1.f, 1.f });
@@ -33,8 +35,13 @@ public:
     void jump() {
         veolocityY = jumpHeight; // Set the vertical velocity to jump height
     }
-    
+	// Update the player image based on the vertical velocity
+    void updateImage() {
+		sprite.setTexture(veolocityY < 0 ? jump_Texture : stand_Texture);
+    }
+
     void update() {
+        updateImage();
         if (sprite.getPosition().y < 0) {
             sprite.setPosition({ sprite.getPosition().x, 0.f }); // Prevent going above the top
             veolocityY = 0.f; // Reset vertical velocity
@@ -68,7 +75,7 @@ public:
 		gapRectangle({ static_cast<float>(width), static_cast<float>(gapHeight) }),
 		topRectangle({ width, static_cast<float>(gapPosition) }),
         bottomRectangle({ width,  static_cast<float>(height)}),
-        texture("assets/bricksx64.png"),
+        texture("assets/BrickWall.png"), 
         textureSprite(texture)
     {
         texture.setRepeated(true);
@@ -310,7 +317,25 @@ private:
         window.display();
     }
     void showDeathScreen() {
+        const std::string TitleStr = "GAME OVER";
+        const std::string startTextStr = "Press R to Restart";
+        const float titleTextY = 100.f; // Y position for the title text
+        const float startTextY = 300.f; // Y position for the start text
 
+        sf::Text titleText(font, TitleStr);
+        titleText.setCharacterSize(48);
+        titleText.setFillColor(sf::Color::White);
+        titleText.setStyle(sf::Text::Bold);
+        titleText.setPosition({ static_cast<float>(screenWidth) / 2 - titleText.getGlobalBounds().size.x / 2, titleTextY });
+        sf::Text startText(font, startTextStr);
+        startText.setCharacterSize(24);
+        startText.setFillColor(sf::Color::White);
+        startText.setPosition({ static_cast<float>(screenWidth) / 2 - startText.getGlobalBounds().size.x / 2, startTextY });
+
+        window.clear(sf::Color::Black);
+        window.draw(titleText); // Draw the title text
+        window.draw(startText); // Draw the score text
+        window.display();
     }
 public:
     FloppyDogGame() :
