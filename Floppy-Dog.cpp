@@ -75,7 +75,7 @@ public:
 		gapRectangle({ static_cast<float>(width), static_cast<float>(gapHeight) }),
 		topRectangle({ width, static_cast<float>(gapPosition) }),
         bottomRectangle({ width,  static_cast<float>(height)}),
-        texture("assets/BrickWall.png"), 
+        texture("assets/Krita-files/100x150-BrickWall.png"), 
         textureSprite(texture)
     {
         texture.setRepeated(true);
