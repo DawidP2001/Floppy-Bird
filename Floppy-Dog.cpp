@@ -7,134 +7,24 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "Background.h"
-
-class Player {
-private:
-    sf::Texture stand_Texture;
-	sf::Texture jump_Texture;
-    sf::Sprite sprite;
-	float veolocityY = 0.f; // Vertical velocity for jumping
-	float gravity = 0.5f; // Gravity effect
-	float jumpHeight = -8.f; // Height of the jump
-public:
-
-    Player() :
-        stand_Texture("assets/milo-stand.png"),
-		jump_Texture("assets/milo-jump.png"),
-		sprite(stand_Texture)
-    {
-        sprite.setPosition({ 100.f, 500.f });
-        sprite.setScale({ 1.f, 1.f });
-    }
-    ~Player() = default;
-    
-    // Get the player sprite
-    sf::Sprite& getSprite() {
-        return sprite;
-    }
-    
-    void jump() {
-        veolocityY = jumpHeight; // Set the vertical velocity to jump height
-    }
-	// Update the player image based on the vertical velocity
-    void updateImage() {
-		sprite.setTexture(veolocityY < 0 ? jump_Texture : stand_Texture);
-    }
-
-    void update() {
-        updateImage();
-        if (sprite.getPosition().y < 0) {
-            sprite.setPosition({ sprite.getPosition().x, 0.f }); // Prevent going above the top
-            veolocityY = 0.f; // Reset vertical velocity
-        }
-        else if( sprite.getPosition().y + sprite.getGlobalBounds().size.y > 600) {
-            if (veolocityY > 0.f) {
-                sprite.setPosition({ sprite.getPosition().x, 600.f - sprite.getGlobalBounds().size.y });
-                veolocityY = 0.f;
-            }
-		}
-		veolocityY += gravity; // Apply gravity to the vertical velocity
-        sprite.move({ 0.f, veolocityY });
-    }
-};
-
-class Obstacle {
-private:
-    const float width = 100;
-    const int height = 600;
-    const int gapHeight = 150;
-    int gapPosition = 250;
-	bool scored = false; // This variable is used to check if the player has scored by passing the obstacle, so it wouldn't be counted multiple times
-
-    sf::Texture texture;
-    sf::Sprite textureSprite;
-	sf::RectangleShape gapRectangle;
-    sf::RectangleShape topRectangle;
-    sf::RectangleShape bottomRectangle;
-public:
-    Obstacle() :
-		gapRectangle({ static_cast<float>(width), static_cast<float>(gapHeight) }),
-		topRectangle({ width, static_cast<float>(gapPosition) }),
-        bottomRectangle({ width,  static_cast<float>(height)}),
-        texture("assets/Krita-files/100x150-BrickWall.png"), 
-        textureSprite(texture)
-    {
-        texture.setRepeated(true);
-        textureSprite.setTextureRect({ {0, 0}, {static_cast<int>(width), height} });
-		gapRectangle.setFillColor(sf::Color(0, 0, 0, 128));
-	}
-    ~Obstacle() = default;
-    
-
-    /// Positioning after RESET NEEDS TO BE FIXED
-    void update() {
-        topRectangle.move({ -5.f, 0.f });
-        bottomRectangle.move({ -5.f, 0.f });
-
-        if(topRectangle.getPosition().x < -width) {
-			gapPosition = rand() % (height - gapHeight); // Generate new gap position
-            topRectangle.setPosition({ 800.f, 0.f });
-			topRectangle.setSize({ 100.f, static_cast<float>(gapPosition) });
-            bottomRectangle.setPosition({ 800.f, static_cast<float>(gapPosition+gapHeight) });
-			resetScored();
-		}
-		textureSprite.setPosition(topRectangle.getPosition());
-		gapRectangle.setPosition({ topRectangle.getPosition().x, topRectangle.getPosition().y + gapPosition });
-    }
-    
-    // Set position for both parts
-    void setPosition(float x, float y) {
-        topRectangle.setPosition({ x, y });
-        bottomRectangle.setPosition({ x, y + gapPosition + gapHeight });
-    }
-    
-    void setScored() {
-        scored = true;
-	}
-    void resetScored() {
-        scored = false;
-    }
-    bool hasScored() const {
-        return scored;
-	}
-    // Get the rectangles
-    sf::RectangleShape& getTopRectangle() {
-        return topRectangle;
-    }
-    
-    sf::RectangleShape& getBottomRectangle() {
-        return bottomRectangle;
-    }
-    sf::Sprite& getSprite() {
-        return textureSprite;
-    }
-    sf::RectangleShape& getGapRectangle() {
-        return gapRectangle;
-	}
-};
+#include "Player.h"
+#include "Obstacle.h"
+#include <vector>
 
 class FloppyDogGame {
 private:
+    const int numOfObstacles = 2; // Number of obstacles to create
+    const unsigned int fontSize = 24; // Font size for the score text
+    const int frameCount = 60;
+    const unsigned int screenWidth = 800;
+    const unsigned int screenHeight = 600;
+    const float scrollScreenSpeed = 5; // Speed of the scrolling screen
+    const int bgGrassSpriteHeight = 200;
+    const float obstacleSpacing = 450; // The screen size is 800 plus obstacle 100 so the spacing number needs to keep that in mind
+    int score = 0; // Player score
+    bool gameOver = false; // Game over state
+    bool gameStarted = false; // Game started state
+
     sf::Font font;
     std::string scoreTextStr;
     sf::Color scoreColor;
@@ -142,34 +32,11 @@ private:
     sf::Text scoreText;
 	Player player;
     std::vector<Obstacle> obstacles;
-	sf::Texture bgWallTexture;
-    sf::Sprite bgWallSprite1;
-	sf::Sprite bgWallSprite2; // 2 sprites for a scrolling background
-	sf::Texture bgGrassTexture;
-    std::vector<sf::Sprite> bgGrassSprites;
-
-	const int numOfObstacles = 2; // Number of obstacles to create
-    const unsigned int fontSize = 24; // Font size for the score text
-    const int frameCount = 60;
-    const unsigned int screenWidth = 800;
-    const unsigned int screenHeight = 600;
-	const float scrollScreenSpeed = 5; // Speed of the scrolling screen
-    const int bgGrassSpriteHeight = 200;
-	const float obstacleSpacing = 450; // The screen size is 800 plus obstacle 100 so the spacing number needs to keep that in mind
-    int score = 0; // Player score
-	bool gameOver = false; // Game over state
-	bool gameStarted = false; // Game started state
+    Background background; // Background object
 
     ///////////////////////
     // DRAW FUNCTIONS
     ///////////////////////
-    void drawBackground() {
-		window.draw(bgWallSprite1);
-		window.draw(bgWallSprite2);
-        for (const auto& grassSprite : bgGrassSprites) {
-            window.draw(grassSprite);
-        }
-	}
     void drawObstacles() {
         for (Obstacle& obstacle : obstacles) {
             window.draw(obstacle.getTopRectangle());
@@ -181,7 +48,7 @@ private:
     void draw() {
         window.clear();
 
-        drawBackground();
+        background.drawBackground();
         drawObstacles();
         window.draw(scoreText);
         window.draw(player.getSprite());
@@ -191,23 +58,6 @@ private:
     ///////////////////////
     // CREATE FUNCTIONS
     ///////////////////////
-    void createBackground() {
-        // Create background Wall
-        bgWallTexture.setRepeated(true); // Enable texture repetition for the background
-        bgWallSprite1.setPosition({ 0.f, 0.f });
-        bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
-        bgWallSprite1.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
-        bgWallSprite2.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), static_cast<int>(screenHeight)}) });
-
-		// Create background Grass
-        bgGrassTexture.setRepeated(true); // Enable texture repetition for the grass
-        for (int i = 0; i < 2; ++i) {
-            sf::Sprite grassSprite(bgGrassTexture);
-            grassSprite.setPosition({ static_cast<float>(i * screenWidth), static_cast<float>(screenHeight - bgGrassSpriteHeight) });
-            grassSprite.setTextureRect({ sf::IntRect({0, 0}, {static_cast<int>(screenWidth), bgGrassSpriteHeight}) });
-            bgGrassSprites.push_back(grassSprite);
-        }
-	}   
     void createObstacles(const int numberOfObstacles) {
         // Create a new obstacle and add it to the vector
         for (int i = 0; i < numberOfObstacles; ++i) {
@@ -225,28 +75,8 @@ private:
             obstacle.update();
         }
     }
-    void updateBackground() {
-        // Move the background sprites to create a scrolling effect
-        bgWallSprite1.move({ -scrollScreenSpeed, 0.f });
-        bgWallSprite2.move({ -scrollScreenSpeed, 0.f });
-        // Reset position if they go off screen
-        if (bgWallSprite1.getPosition().x <= -static_cast<float>(screenWidth)) {
-            bgWallSprite1.setPosition({ static_cast<float>(screenWidth), 0.f });
-        }
-        if (bgWallSprite2.getPosition().x <= -static_cast<float>(screenWidth)) {
-            bgWallSprite2.setPosition({ static_cast<float>(screenWidth), 0.f });
-        }
-
-		// Update grass sprites 
-        for (auto& grassSprite : bgGrassSprites) {
-            grassSprite.move({ -scrollScreenSpeed, 0.f });
-            if (grassSprite.getPosition().x <= -static_cast<float>(screenWidth)) {
-                grassSprite.setPosition({ static_cast<float>(screenWidth), static_cast<float>(screenHeight - bgGrassSpriteHeight) });
-            }
-		}
-	}
     void update() {
-        updateBackground();
+        background.updateBackground();
         player.update();
 		updateObstacles();
     }
@@ -346,15 +176,11 @@ public:
         scoreText(font, scoreTextStr),
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
 		player(),
-        bgWallTexture("assets/Cielo pixelado.png"),
-		bgWallSprite1(bgWallTexture),
-        bgWallSprite2(bgWallTexture),
-		bgGrassTexture("assets/grass-set-00/grass14.png")
+		background(screenWidth, screenHeight, 200, scrollScreenSpeed, &window)
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
         window.setFramerateLimit(frameCount);
-        createBackground();
 		createObstacles(numOfObstacles); // Create initial obstacles
     }
     
