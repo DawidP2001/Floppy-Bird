@@ -176,7 +176,7 @@ public:
         scoreText(font, scoreTextStr),
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
 		player(),
-		background(screenWidth, screenHeight, 200, scrollScreenSpeed, &window)
+		background(screenWidth, screenHeight, scrollScreenSpeed, &window)
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
