@@ -1,8 +1,19 @@
-// Floppy-Dog.cpp : This file contains the 'main' function. Program execution begins and ends there.
-// Author: Dawid Pionk
-// Date: 03/08/2025
-// Copyright (c) 2025 Dawid Pionk. All rights reserved.
+/* Floppy - Dog.cpp : This file contains the 'main' function.Program execution begins and ends there.
+    Author: Dawid Pionk
+    Date: 03/08/2025
+    Copyright (c) 2025 Dawid Pionk. All rights reserved.
 
+    To Do:
+       - Make menu look better
+	   - Add sound effects
+       - Implement death
+	   - Implement high score tracking
+       - Implement skins
+	   - Draw milo falling animation
+
+    Reminder:
+        Last thing i DId was work on the jump.wav file
+*/
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -91,6 +102,7 @@ private:
         obstacles.clear(); // Clear existing obstacles
         createObstacles(numOfObstacles); // Create new obstacles
 		player.getSprite().setPosition({ 100.f, 500.f }); // Reset player position
+
     }
     void collisionDetection() {
         for (Obstacle& obstacle : obstacles) {
@@ -99,7 +111,7 @@ private:
             sf::FloatRect bottomBounds = obstacle.getBottomRectangle().getGlobalBounds();
 
             if (playerBounds.findIntersection(topBounds) || playerBounds.findIntersection(bottomBounds)) {
-                //reset(); // Reset the game if collision occurs
+				gameOver = true;
             }
             else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
                 // if the player doesn't die and is pass the x axis of the top obstacle +1 point
@@ -152,20 +164,30 @@ private:
         const std::string startTextStr = "Press R to Restart";
         const float titleTextY = 100.f; // Y position for the title text
         const float startTextY = 300.f; // Y position for the start text
+        const sf::Vector2f scoreTextLocation = { 350.f, 0.f };
+        const std::string scoreStr = "Score: " + std::to_string(score);
 
         sf::Text titleText(font, TitleStr);
         titleText.setCharacterSize(48);
         titleText.setFillColor(sf::Color::White);
         titleText.setStyle(sf::Text::Bold);
         titleText.setPosition({ static_cast<float>(screenWidth) / 2 - titleText.getGlobalBounds().size.x / 2, titleTextY });
+
         sf::Text startText(font, startTextStr);
         startText.setCharacterSize(24);
         startText.setFillColor(sf::Color::White);
         startText.setPosition({ static_cast<float>(screenWidth) / 2 - startText.getGlobalBounds().size.x / 2, startTextY });
 
+        sf::Text scoreText(font, scoreStr);
+        scoreText.setCharacterSize(24);
+        scoreText.setFillColor(sf::Color::White);
+        scoreText.setStyle(sf::Text::Bold);
+        scoreText.setPosition(scoreTextLocation);
+
         window.clear(sf::Color::Black);
         window.draw(titleText); // Draw the title text
         window.draw(startText); // Draw the score text
+        window.draw(scoreText);
         window.display();
     }
 public:
@@ -188,7 +210,10 @@ public:
     
     void run() {
         while (window.isOpen()) {
-            if(gameStarted){
+            if (gameOver) {
+                showDeathScreen();
+			}
+            else if(gameStarted){
             collisionDetection();
 			update();
             draw();
@@ -209,6 +234,15 @@ public:
                         gameStarted = true; // Start the game
                     }
 				}
+                if (event->is<sf::Event::KeyPressed>() &&
+                    event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::R) {
+                    if (gameOver) {
+                        gameOver = false;
+                        reset();
+                        gameStarted = true;
+                        break;
+                    }
+                }
             }
         }
     }

@@ -1,12 +1,15 @@
 #pragma once
 #ifndef PLAYER_H
 #define PLAYER_H
+#include <SFML/Audio.hpp>
 
 class Player {
 private:
     sf::Texture stand_Texture;
     sf::Texture jump_Texture;
     sf::Sprite sprite;
+    sf::SoundBuffer jumpBuffer;
+    sf::Sound* jumpSound;
     float veolocityY = 0.f; // Vertical velocity for jumping
     float gravity = 0.5f; // Gravity effect
     float jumpHeight = -8.f; // Height of the jump
@@ -17,6 +20,9 @@ public:
         jump_Texture("assets/milo-jump.png"),
         sprite(stand_Texture)
     {
+        if (!jumpBuffer.loadFromFile("assets/Sound/jump.wav"))
+            throw std::runtime_error("Failed to load jump sound!");
+        jumpSound = new sf::Sound(jumpBuffer);
         sprite.setPosition({ 100.f, 500.f });
         sprite.setScale({ 1.f, 1.f });
     }
@@ -28,6 +34,7 @@ public:
     }
 
     void jump() {
+		jumpSound->play(); // Play jump sound
         veolocityY = jumpHeight; // Set the vertical velocity to jump height
     }
     // Update the player image based on the vertical velocity
