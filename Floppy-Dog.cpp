@@ -7,9 +7,9 @@
        - Make menu look better
 	   - Add sound effects
        - Implement death
-	   - Implement high score tracking
+	   - Implement high score tracking using highScore.txt
        - Implement skins
-	   - Draw milo falling animation
+		- Make sound effects play at the right time
 
     Reminder:
         Last thing i DId was work on the jump.wav file
@@ -104,6 +104,7 @@ private:
 		player.getSprite().setPosition({ 100.f, 500.f }); // Reset player position
 
     }
+    /*Detects whether milo colided with the brick wall*/
     void collisionDetection() {
         for (Obstacle& obstacle : obstacles) {
             sf::FloatRect playerBounds = player.getSprite().getGlobalBounds();
@@ -161,35 +162,63 @@ private:
     }
     void showDeathScreen() {
         const std::string TitleStr = "GAME OVER";
-        const std::string startTextStr = "Press R to Restart";
-        const float titleTextY = 100.f; // Y position for the title text
-        const float startTextY = 300.f; // Y position for the start text
-        const sf::Vector2f scoreTextLocation = { 350.f, 0.f };
-        const std::string scoreStr = "Score: " + std::to_string(score);
-
+        const float titleTextY = 100.f;
         sf::Text titleText(font, TitleStr);
         titleText.setCharacterSize(48);
         titleText.setFillColor(sf::Color::White);
         titleText.setStyle(sf::Text::Bold);
         titleText.setPosition({ static_cast<float>(screenWidth) / 2 - titleText.getGlobalBounds().size.x / 2, titleTextY });
 
+        const std::string startTextStr = "Press R to Restart";
+        const float startTextY = 300.f;
         sf::Text startText(font, startTextStr);
         startText.setCharacterSize(24);
         startText.setFillColor(sf::Color::White);
         startText.setPosition({ static_cast<float>(screenWidth) / 2 - startText.getGlobalBounds().size.x / 2, startTextY });
 
+        const sf::Vector2f scoreTextLocation = { 350.f, 200.f };
+        const std::string scoreStr = "Score: " + std::to_string(score);
         sf::Text scoreText(font, scoreStr);
         scoreText.setCharacterSize(24);
         scoreText.setFillColor(sf::Color::White);
         scoreText.setStyle(sf::Text::Bold);
         scoreText.setPosition(scoreTextLocation);
 
+        const sf::Vector2f highScoreTextLocation = { 320.f, 240.f };
+        const std::string highScoreStr = "High Score: " + std::to_string(score);
+        sf::Text highScoreText(font, highScoreStr);
+        highScoreText.setCharacterSize(24);
+        highScoreText.setFillColor(sf::Color::White);
+        highScoreText.setStyle(sf::Text::Bold);
+        highScoreText.setPosition(highScoreTextLocation);
+        
         window.clear(sf::Color::Black);
         window.draw(titleText); // Draw the title text
         window.draw(startText); // Draw the score text
         window.draw(scoreText);
+        window.draw(highScoreText);
         window.display();
     }
+    ///////////////////////
+    // Animation FUNCTIONS
+    ///////////////////////
+	void deathAnimation() {
+		// Simple death animation: make the player fall down
+        sf::sleep(sf::milliseconds(30));
+		player.changeImageToFall();
+		float dropSpeed = 5.f;
+		const float acceleration = 1.05f;
+		while (player.getSprite().getPosition().y < static_cast<float>(screenHeight)) {
+            while (const std::optional event = window.pollEvent()) {
+                if (event->is<sf::Event::Closed>())
+                    window.close();
+            }
+			player.getSprite().move({ 0.f, dropSpeed }); // Move down by 5 pixels
+			dropSpeed = dropSpeed * acceleration; // Accelerate the fall
+			draw(); // Redraw the screen
+			sf::sleep(sf::milliseconds(30)); // Pause for a short duration
+		}
+	}
 public:
     FloppyDogGame() :
         font("assets/fonts/arial.ttf"), // Load the font
@@ -211,6 +240,7 @@ public:
     void run() {
         while (window.isOpen()) {
             if (gameOver) {
+                deathAnimation();
                 showDeathScreen();
 			}
             else if(gameStarted){

@@ -6,6 +6,7 @@
 class Player {
 private:
     sf::Texture stand_Texture;
+	sf::Texture fall_Texture;
     sf::Texture jump_Texture;
     sf::Sprite sprite;
     sf::SoundBuffer jumpBuffer;
@@ -18,6 +19,7 @@ public:
     Player() :
         stand_Texture("assets/milo-stand.png"),
         jump_Texture("assets/milo-jump.png"),
+		fall_Texture("assets/milo-fall.png"),   
         sprite(stand_Texture)
     {
         if (!jumpBuffer.loadFromFile("assets/Sound/jump.wav"))
@@ -41,6 +43,9 @@ public:
     void updateImage() {
         sprite.setTexture(veolocityY < 0 ? jump_Texture : stand_Texture);
     }
+	void changeImageToFall() {
+		sprite.setTexture(fall_Texture);
+	}
 
     void update() {
         updateImage();
