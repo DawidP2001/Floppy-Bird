@@ -140,24 +140,14 @@ private:
     // SCREEN FUNCTIONS
     ///////////////////////
     void showStartScreen() {
-		const std::string TitleStr = "Floppy Dog Game";
-		const std::string startTextStr = "Press Space to Start";
-		const float titleTextY = 100.f; // Y position for the title text
-		const float startTextY = 300.f; // Y position for the start text
-
-		sf::Text titleText(font, TitleStr);
-		titleText.setCharacterSize(48);
-        titleText.setFillColor(sf::Color::White);
-        titleText.setStyle(sf::Text::Bold);
-		titleText.setPosition({ static_cast<float>(screenWidth) / 2 - titleText.getGlobalBounds().size.x / 2, titleTextY });
-        sf::Text startText(font, startTextStr);
-		startText.setCharacterSize(24);
-        startText.setFillColor(sf::Color::White);
-		startText.setPosition({ static_cast<float>(screenWidth) / 2 - startText.getGlobalBounds().size.x / 2, startTextY });
+		
+		sf::Texture startScreenTexture;
+		startScreenTexture.loadFromFile("assets/StartMenu.png");
+		sf::Sprite startScreenSprite(startScreenTexture);
+		startScreenSprite.setPosition({ 0.f, 0.f });
 
 		window.clear(sf::Color::Black);
-		window.draw(titleText); // Draw the title text
-		window.draw(startText); // Draw the score text
+		window.draw(startScreenSprite); // Draw the title text
         window.display();
     }
     void showDeathScreen() {
