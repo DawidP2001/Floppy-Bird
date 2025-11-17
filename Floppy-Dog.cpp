@@ -21,6 +21,7 @@
 #include "Player.h"
 #include "Obstacle.h"
 #include <vector>
+#include "StartMenu.h"
 
 class FloppyDogGame {
 private:
