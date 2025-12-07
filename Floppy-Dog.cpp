@@ -45,6 +45,7 @@ private:
 	Player player;
     std::vector<Obstacle> obstacles;
     Background background; // Background object
+    StartMenu startMenu;
 
     ///////////////////////
     // DRAW FUNCTIONS
@@ -140,17 +141,6 @@ private:
     ///////////////////////
     // SCREEN FUNCTIONS
     ///////////////////////
-    void showStartScreen() {
-		
-		sf::Texture startScreenTexture;
-		startScreenTexture.loadFromFile("assets/StartMenu.png");
-		sf::Sprite startScreenSprite(startScreenTexture);
-		startScreenSprite.setPosition({ 0.f, 0.f });
-
-		window.clear(sf::Color::Black);
-		window.draw(startScreenSprite); // Draw the title text
-        window.display();
-    }
     void showDeathScreen() {
         const std::string TitleStr = "GAME OVER";
         const float titleTextY = 100.f;
@@ -218,7 +208,8 @@ public:
         scoreText(font, scoreTextStr),
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
 		player(),
-		background(screenWidth, screenHeight, scrollScreenSpeed, &window)
+		background(screenWidth, screenHeight, scrollScreenSpeed, &window),
+		startMenu(&window)
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
@@ -240,7 +231,7 @@ public:
             draw();
             } 
             else {
-                showStartScreen();
+                startMenu.drawStartMenu();
 			}
             // Handle window events
             while (const std::optional event = window.pollEvent()) {

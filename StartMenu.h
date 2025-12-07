@@ -5,22 +5,28 @@
 class StartMenu {
 private:
 	sf::RenderWindow* window; // Pointer to the render window
-	sf::Texture startMenuTexture;
-	sf::Sprite startMenuSprite;
+	std::vector<sf::Texture> startTextures;
 public:
 	StartMenu(sf::RenderWindow* window) :
 		window(window),
-		startMenuTexture(),
-		startMenuSprite(startMenuTexture)
+		startTextures(206)
 	{
-		if (!startMenuTexture.loadFromFile("assets/StartMenu.png")) {
-			std::cerr << "Error loading StartMenu.png" << std::endl;
+		for (int i = 0; i < 206; ++i) {
+			sf::Texture texture("assets/Start-Menu/Sequence/" + std::to_string(i) +".png");
+			startTextures[i] = texture;
 		}
-		startMenuSprite.setTexture(startMenuTexture);
-		startMenuSprite.setPosition({ 0.f, 0.f });
+		
 	}
 	void drawStartMenu() {
-		window->draw(startMenuSprite);
+		sf::Sprite startMenuSprite(startTextures[0]);
+		startMenuSprite.setPosition({ 0.f, 0.f });
+		for (int i = 0; i < startTextures.size(); ++i) {
+			startMenuSprite.setTexture(startTextures[i]);
+			window->clear(sf::Color::Black);
+			window->draw(startMenuSprite);
+			window->display();
+			sf::sleep(sf::milliseconds(60));
+		}
 	}
 };
 
