@@ -22,7 +22,7 @@ public:
 		fall_Texture("assets/milo-fall.png"),   
         sprite(stand_Texture)
     {
-        if (!jumpBuffer.loadFromFile("assets/Sound/jump.wav"))
+        if (!jumpBuffer.loadFromFile("assets/Sound/jumpOld.wav"))
             throw std::runtime_error("Failed to load jump sound!");
         jumpSound = new sf::Sound(jumpBuffer);
         sprite.setPosition({ 100.f, 500.f });

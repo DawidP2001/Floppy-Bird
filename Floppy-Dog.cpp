@@ -37,6 +37,8 @@ private:
     bool gameOver = false; // Game over state
     bool gameStarted = false; // Game started state
 	bool gameOverScreen = false; // So the game over screen only shows once
+	bool musicPlaying = false; // Music playing 
+	bool deathSoundPlayed = false; // Death sound played
 
     sf::Font font;
     std::string scoreTextStr;
@@ -47,6 +49,11 @@ private:
     std::vector<Obstacle> obstacles;
     Background background; // Background object
     StartMenu startMenu;
+	sf::Music gameMusic;
+	sf::SoundBuffer scoreBuffer;
+	sf::Sound scoreSound;
+	sf::SoundBuffer deathBuffer;
+	sf::Sound deathSound;
 
     ///////////////////////
     // DRAW FUNCTIONS
@@ -121,6 +128,7 @@ private:
             else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
                 // if the player doesn't die and is pass the x axis of the top obstacle +1 point
                 ++score;
+				scoreSound.play(); // Play score sound
                 obstacle.setScored(); // Mark this obstacle as scored
                 scoreTextStr = "Score: " + std::to_string(score);
                 scoreText.setString(scoreTextStr);
@@ -200,15 +208,22 @@ public:
         scoreTextStr("Score: 0"), // Initialize score text
         scoreColor(sf::Color::White), // Set color for the score text
         scoreText(font, scoreTextStr),
-        window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
+        window(sf::VideoMode({ 800, 600 }), "Flappy Dog"),
 		player(),
 		background(screenWidth, screenHeight, scrollScreenSpeed, &window),
-		startMenu(&window, &gameStarted)
+		startMenu(&window, &gameStarted),
+		scoreBuffer("assets/Sound/point.wav"),
+		scoreSound(scoreBuffer),
+		deathBuffer("assets/Sound/death.wav"),
+		deathSound(deathBuffer)
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
         window.setFramerateLimit(frameCount);
 		createObstacles(numOfObstacles); // Create initial obstacles
+		gameMusic.openFromFile("assets/music/play.wav");
+        gameMusic.setLooping(true);
+        gameMusic.setVolume(50);   // optional (0-100)
     }
     
     ~FloppyDogGame() = default;
@@ -216,16 +231,25 @@ public:
     void run() {
         while (window.isOpen()) {
             if (gameOver) {
+                if (!deathSoundPlayed) {
+                    deathSound.play(); // Play death sound
+                    musicPlaying = false;
+                    gameMusic.stop();
+					deathSoundPlayed = true;
+                }
                 deathAnimation();
-                if (gameOverScreen){ 
+                if (gameOverScreen){
                     showDeathScreen(); 
                 }
-                
 			}
             else if(gameStarted){
-            collisionDetection();
-			update();
-            draw();
+				if (!musicPlaying) {
+					gameMusic.play();
+					musicPlaying = true;
+				}
+                collisionDetection();
+			    update();
+                draw();
             } 
             else {
 				startMenu.playMusic();
@@ -248,6 +272,7 @@ public:
                     event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::R) {
                     if (gameOver) {
                         gameOver = false;
+						deathSoundPlayed = false;
 						gameOverScreen = false;
                         reset();
                         gameStarted = true;

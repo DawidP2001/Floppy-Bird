@@ -28,6 +28,7 @@ public:
 				window->close();
 			if (event->is<sf::Event::KeyPressed>() &&
 				event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Space) {
+				music.stop();
 				*gameStarted = true; // Start the game
 				return true;
 			}
