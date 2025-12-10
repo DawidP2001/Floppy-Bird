@@ -181,7 +181,7 @@ private:
     // SCREEN FUNCTIONS
     ///////////////////////
     void showDeathScreen() {
-		highScore = loadHighScore("highScore.txt");
+		highScore = loadHighScore("assets/highScore.txt");
 		gameOverScreen = false;
 		const sf::Texture deathScreenTexture = *new sf::Texture("assets/GameOver.png");
 		sf::Color textColor = sf::Color::Red;
@@ -207,7 +207,7 @@ private:
         highScoreText.setStyle(sf::Text::Bold);
         highScoreText.setPosition(highScoreTextLocation);
 		if (score > highScore) {
-			setHighScore("highScore.txt", score);
+			setHighScore("assets/highScore.txt", score);
 		}
         window.draw(deathScreenSprite); // Draw the title text
         window.draw(scoreText);
@@ -267,7 +267,7 @@ public:
         gameMusic.setLooping(true);
         gameMusic.setVolume(50);   // optional (0-100)
         deathSound.setVolume(50);
-		highScore = loadHighScore("highScore.txt");
+		highScore = loadHighScore("assets/highScore.txt");
     }
     
     ~FloppyDogGame() = default;
