@@ -22,6 +22,7 @@
 #include "Obstacle.h"
 #include <vector>
 #include "StartMenu.h"
+#include <fstream>
 
 class FloppyDogGame {
 private:
@@ -34,6 +35,7 @@ private:
     const int bgGrassSpriteHeight = 200;
     const float obstacleSpacing = 450; // The screen size is 800 plus obstacle 100 so the spacing number needs to keep that in mind
     int score = 0; // Player score
+    int highScore;
     bool gameOver = false; // Game over state
     bool gameStarted = false; // Game started state
 	bool gameOverScreen = false; // So the game over screen only shows once
@@ -72,6 +74,7 @@ private:
         background.drawBackground();
         drawObstacles();
         window.draw(scoreText);
+		drawScore();
         window.draw(player.getSprite());
 
         window.display();
@@ -114,6 +117,32 @@ private:
 		player.getSprite().setPosition({ 100.f, 500.f }); // Reset player position
 
     }
+    void setHighScore(const std::string& filename, int highscore) {
+        std::ofstream file(filename);
+
+        if (file.is_open()) {
+            file << highscore;
+            file.close();
+        }
+        else {
+            std::cout << "Could not save high score!\n";
+        }
+    }
+    int loadHighScore(const std::string& filename) {
+        std::ifstream file(filename);
+
+        int highscore = 0;
+
+        if (file.is_open()) {
+            file >> highscore;   // read the integer
+            file.close();
+        }
+        else {
+            std::cout << "Could not open file. Starting with default score of 0.\n";
+        }
+
+        return highscore;
+    }
     /*Detects whether milo colided with the brick wall*/
     void collisionDetection() {
         for (Obstacle& obstacle : obstacles) {
@@ -152,6 +181,7 @@ private:
     // SCREEN FUNCTIONS
     ///////////////////////
     void showDeathScreen() {
+		highScore = loadHighScore("highScore.txt");
 		gameOverScreen = false;
 		const sf::Texture deathScreenTexture = *new sf::Texture("assets/GameOver.png");
 		sf::Color textColor = sf::Color::Red;
@@ -170,17 +200,29 @@ private:
         scoreText.setPosition(scoreTextLocation);
 
         const sf::Vector2f highScoreTextLocation = { 310.f, 310.f };
-        const std::string highScoreStr = "High Score: " + std::to_string(score);
+        const std::string highScoreStr = "High Score: " + std::to_string(highScore);
         sf::Text highScoreText(font, highScoreStr);
         highScoreText.setCharacterSize(28);
         highScoreText.setFillColor(textColor);
         highScoreText.setStyle(sf::Text::Bold);
         highScoreText.setPosition(highScoreTextLocation);
-        
+		if (score > highScore) {
+			setHighScore("highScore.txt", score);
+		}
         window.draw(deathScreenSprite); // Draw the title text
         window.draw(scoreText);
         window.draw(highScoreText);
         window.display();
+    }
+    void drawScore() {
+        sf::Font font("assets/fonts/arial.ttf");
+        std::string textStr("HighScore: " + std::to_string(highScore));
+		sf::Color textColor = sf::Color::White;
+		sf::Text text(font, textStr);
+		text.setCharacterSize(fontSize);
+		text.setFillColor(textColor);
+		text.setPosition({ 620.f, 0.f });
+		window.draw(text); // Draw the score text
     }
     ///////////////////////
     // Animation FUNCTIONS
@@ -224,6 +266,8 @@ public:
 		gameMusic.openFromFile("assets/music/play.wav");
         gameMusic.setLooping(true);
         gameMusic.setVolume(50);   // optional (0-100)
+        deathSound.setVolume(50);
+		highScore = loadHighScore("highScore.txt");
     }
     
     ~FloppyDogGame() = default;
