@@ -36,6 +36,7 @@ private:
     int score = 0; // Player score
     bool gameOver = false; // Game over state
     bool gameStarted = false; // Game started state
+	bool gameOverScreen = false; // So the game over screen only shows once
 
     sf::Font font;
     std::string scoreTextStr;
@@ -115,6 +116,7 @@ private:
 
             if (playerBounds.findIntersection(topBounds) || playerBounds.findIntersection(bottomBounds)) {
 				gameOver = true;
+				gameOverScreen = true; // So the game over screen shows again
             }
             else if (playerBounds.position.x > topBounds.position.x && !obstacle.hasScored()) {
                 // if the player doesn't die and is pass the x axis of the top obstacle +1 point
@@ -142,40 +144,32 @@ private:
     // SCREEN FUNCTIONS
     ///////////////////////
     void showDeathScreen() {
-        const std::string TitleStr = "GAME OVER";
-        const float titleTextY = 100.f;
-        sf::Text titleText(font, TitleStr);
-        titleText.setCharacterSize(48);
-        titleText.setFillColor(sf::Color::White);
-        titleText.setStyle(sf::Text::Bold);
-        titleText.setPosition({ static_cast<float>(screenWidth) / 2 - titleText.getGlobalBounds().size.x / 2, titleTextY });
+		gameOverScreen = false;
+		const sf::Texture deathScreenTexture = *new sf::Texture("assets/GameOver.png");
+		sf::Color textColor = sf::Color::Red;
+        textColor.r = 136;
+		textColor.g = 6;
+        textColor.b = 6;
+		sf::Sprite deathScreenSprite(deathScreenTexture);
+        deathScreenSprite.setPosition({ 0.f, 0.f });
 
-        const std::string startTextStr = "Press R to Restart";
-        const float startTextY = 300.f;
-        sf::Text startText(font, startTextStr);
-        startText.setCharacterSize(24);
-        startText.setFillColor(sf::Color::White);
-        startText.setPosition({ static_cast<float>(screenWidth) / 2 - startText.getGlobalBounds().size.x / 2, startTextY });
-
-        const sf::Vector2f scoreTextLocation = { 350.f, 200.f };
+        const sf::Vector2f scoreTextLocation = { 340.f, 260.f };
         const std::string scoreStr = "Score: " + std::to_string(score);
         sf::Text scoreText(font, scoreStr);
-        scoreText.setCharacterSize(24);
-        scoreText.setFillColor(sf::Color::White);
+        scoreText.setCharacterSize(28);
+        scoreText.setFillColor(textColor);
         scoreText.setStyle(sf::Text::Bold);
         scoreText.setPosition(scoreTextLocation);
 
-        const sf::Vector2f highScoreTextLocation = { 320.f, 240.f };
+        const sf::Vector2f highScoreTextLocation = { 310.f, 310.f };
         const std::string highScoreStr = "High Score: " + std::to_string(score);
         sf::Text highScoreText(font, highScoreStr);
-        highScoreText.setCharacterSize(24);
-        highScoreText.setFillColor(sf::Color::White);
+        highScoreText.setCharacterSize(28);
+        highScoreText.setFillColor(textColor);
         highScoreText.setStyle(sf::Text::Bold);
         highScoreText.setPosition(highScoreTextLocation);
         
-        window.clear(sf::Color::Black);
-        window.draw(titleText); // Draw the title text
-        window.draw(startText); // Draw the score text
+        window.draw(deathScreenSprite); // Draw the title text
         window.draw(scoreText);
         window.draw(highScoreText);
         window.display();
@@ -209,7 +203,7 @@ public:
         window(sf::VideoMode({ 800, 600 }), "Floppy Dog Game"),
 		player(),
 		background(screenWidth, screenHeight, scrollScreenSpeed, &window),
-		startMenu(&window)
+		startMenu(&window, &gameStarted)
     {
 		scoreText.setCharacterSize(fontSize);
         window.setKeyRepeatEnabled(false);
@@ -223,7 +217,10 @@ public:
         while (window.isOpen()) {
             if (gameOver) {
                 deathAnimation();
-                showDeathScreen();
+                if (gameOverScreen){ 
+                    showDeathScreen(); 
+                }
+                
 			}
             else if(gameStarted){
             collisionDetection();
@@ -231,6 +228,7 @@ public:
             draw();
             } 
             else {
+				startMenu.playMusic();
                 startMenu.drawStartMenu();
 			}
             // Handle window events
@@ -250,6 +248,7 @@ public:
                     event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::R) {
                     if (gameOver) {
                         gameOver = false;
+						gameOverScreen = false;
                         reset();
                         gameStarted = true;
                         break;
