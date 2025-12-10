@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Floppy-Dog.cpp">
+    <ClCompile Include="FlappyDog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
