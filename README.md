@@ -1,22 +1,28 @@
-[![LinkedIn][linkedin-shield]][linkedin-url]
-[![Website]][Website-url]
-
-
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dawid-pionk)
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@dawidpionk6019)
+[![Website](https://img.shields.io/badge/Website-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://DawidPionk.com)
 # Floppy Bird Game <i><b style="opacity: 50%;">Currently in progess</b></i>
 
 ## About
+Floppy Bird is a simple 2D game inspired by the popular mobile game "Flappy Bird." The player controls a bird that must navigate through a series of pipes without colliding with them. The game features hand-drawn graphics and smooth animations to enhance the gaming experience.
 
 ### Key Features
+- Scoring mechanic
+- Start animation
+- Orgiginal hand-drawn graphics
+- Simple controls
+- Animations
 
 ## Technologies
 * C++
-
-## Development Dependencies
+* SFMl Library
+* Visual Studio
+* Krita
 
 ## Usage
-1. Download SFLM
-2. Download the game files
-3. Follow the instructions for installing SFLM on the [official SFLM website](https://sflm.sourceforge.net/)
+1. Download the repository.
+2. Open the project by clicking x64/Release/FloppyBird.exe
+3. Enjoy the game
 
 ## Authors
 Dawid Pionk
