@@ -217,7 +217,7 @@ private:
     void drawScore() {
         sf::Font font("assets/fonts/arial.ttf");
         std::string textStr("HighScore: " + std::to_string(highScore));
-		sf::Color textColor = sf::Color::White;
+		sf::Color textColor = sf::Color::Black;
 		sf::Text text(font, textStr);
 		text.setCharacterSize(fontSize);
 		text.setFillColor(textColor);
@@ -248,9 +248,9 @@ public:
     FloppyDogGame() :
         font("assets/fonts/arial.ttf"), // Load the font
         scoreTextStr("Score: 0"), // Initialize score text
-        scoreColor(sf::Color::White), // Set color for the score text
+        scoreColor(sf::Color::Black), // Set color for the score text
         scoreText(font, scoreTextStr),
-        window(sf::VideoMode({ 800, 600 }), "Flappy Dog"),
+        window(sf::VideoMode({ 800, 600 }), "Flappy Dog", sf::Style::Titlebar | sf::Style::Close),
 		player(),
 		background(screenWidth, screenHeight, scrollScreenSpeed, &window),
 		startMenu(&window, &gameStarted),
@@ -260,6 +260,7 @@ public:
 		deathSound(deathBuffer)
     {
 		scoreText.setCharacterSize(fontSize);
+		scoreText.setFillColor(scoreColor);
         window.setKeyRepeatEnabled(false);
         window.setFramerateLimit(frameCount);
 		createObstacles(numOfObstacles); // Create initial obstacles
@@ -291,6 +292,7 @@ public:
 					gameMusic.play();
 					musicPlaying = true;
 				}
+				deathSound.stop();
                 collisionDetection();
 			    update();
                 draw();
